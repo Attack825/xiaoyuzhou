@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [phone, setPhone] = useState("");
@@ -8,6 +9,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [codeSent, setCodeSent] = useState(false);
+  const router = useRouter();
 
   const handleSendCode = async () => {
     setLoading(true);
@@ -44,8 +46,10 @@ export default function Login() {
       const data = await res.json();
       if (data.success) {
         setMsg("登录成功");
-        // 可选：登录成功后跳转（需导入 useRouter）
-        // router.push("/");
+        // 保存用户数据到本地存储
+        localStorage.setItem('userData', JSON.stringify(data.data));
+        // 登录成功后跳转到收藏列表页面
+        router.push("/favoriteList");
       } else {
         setMsg(data.message || "登录失败");
       }

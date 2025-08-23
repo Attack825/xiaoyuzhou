@@ -124,8 +124,8 @@ export async function POST(req: NextRequest) {
     const { data: xiaoyuzhouData } = xiaoyuzhouRes;
     const user = xiaoyuzhouData.user;
     const optimizedData = {
-      accessToken,
-      refreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
 
       userId: user.uid,
       nickname: user.nickname,

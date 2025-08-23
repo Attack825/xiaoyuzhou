@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 小宇宙收藏管理
 
-## Getting Started
+一个基于 Next.js 开发的小宇宙播客收藏管理应用，支持用户登录和收藏列表查看。
 
-First, run the development server:
+## 功能特性
+
+- 🔐 **用户登录**: 支持手机号验证码登录小宇宙账号
+- 📚 **收藏列表**: 查看和管理您收藏的播客剧集
+- 🎨 **美观界面**: 现代化的响应式设计，支持移动端
+- 🔄 **实时刷新**: 支持手动刷新收藏列表
+- 🚀 **快速访问**: 一键获取收藏内容
+
+## 技术栈
+
+- **前端框架**: Next.js 14 (App Router)
+- **样式**: Tailwind CSS
+- **语言**: TypeScript
+- **状态管理**: React Hooks
+- **API**: 小宇宙官方 API
+
+## 项目结构
+
+```txt
+src/
+├── app/
+│   ├── api/
+│   │   ├── login/          # 登录 API
+│   │   ├── sendCode/       # 发送验证码 API
+│   │   └── favoriteList/   # 收藏列表 API
+│   ├── login/              # 登录页面
+│   ├── favoriteList/       # 收藏列表页面
+│   ├── layout.tsx          # 根布局
+│   ├── page.tsx            # 主页
+│   └── globals.css         # 全局样式
+└── ...
+```
+
+## 快速开始
+
+### 环境要求
+
+- Node.js 18+
+- npm 或 yarn
+
+### 安装依赖
+
+```bash
+npm install
+# 或
+yarn install
+```
+
+### 启动开发服务器
 
 ```bash
 npm run dev
-# or
+# 或
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://localhost:3000](http://localhost:3000) 查看应用。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 构建生产版本
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+# 或
+yarn build
+```
 
-## Learn More
+## 使用说明
 
-To learn more about Next.js, take a look at the following resources:
+### 1. 登录账号
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. 访问应用主页
+2. 点击"立即登录"按钮
+3. 输入手机号和区域码
+4. 点击"获取验证码"获取验证码
+5. 输入验证码并点击"登录"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. 查看收藏列表
 
-## Deploy on Vercel
+1. 登录成功后会自动跳转到收藏列表页面
+2. 页面会显示您收藏的所有播客剧集
+3. 可以查看剧集详情、播客信息、播放量等
+4. 支持手动刷新收藏列表
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. 功能操作
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **刷新列表**: 点击右上角的刷新按钮
+- **返回主页**: 点击左上角的返回箭头
+- **退出登录**: 点击右上角的"退出登录"按钮
+
+## API 接口
+
+### 登录接口
+
+- **路径**: `/api/login`
+- **方法**: POST
+- **参数**:
+  - `phone`: 手机号
+  - `code`: 验证码
+  - `region`: 区域码 (默认 +86)
+
+### 发送验证码接口
+
+- **路径**: `/api/sendCode`
+- **方法**: POST
+- **参数**:
+  - `phone`: 手机号
+  - `region`: 区域码
+
+### 收藏列表接口
+
+- **路径**: `/api/favoriteList`
+- **方法**: POST
+- **请求头**: `x-jike-access-token`: 登录获取的访问令牌
+
+## 数据存储
+
+应用使用浏览器的 localStorage 来存储用户登录信息，包括：
+
+- 访问令牌 (accessToken)
+- 刷新令牌 (refreshToken)
+- 用户基本信息 (昵称、头像等)
+
+## 注意事项
+
+1. **API 限制**: 本应用使用小宇宙官方 API，请遵守相关使用条款
+2. **令牌安全**: 访问令牌存储在本地，请注意设备安全
+3. **网络要求**: 需要稳定的网络连接来访问小宇宙 API
+4. **浏览器兼容**: 建议使用现代浏览器以获得最佳体验
+
+## 开发说明
+
+### 添加新功能
+
+1. 在 `src/app/api/` 下创建新的 API 路由
+2. 在 `src/app/` 下创建对应的页面组件
+3. 更新主页面的导航链接
+
+### 样式修改
+
+项目使用 Tailwind CSS，可以直接在组件中使用 Tailwind 类名，或修改 `src/app/globals.css` 添加自定义样式。
+
+### 环境变量
+
+如需配置环境变量，可以创建 `.env.local` 文件：
+
+```env
+# 示例环境变量
+NEXT_PUBLIC_API_BASE_URL=https://api.xiaoyuzhoufm.com
+```
+
+## 许可证
+
+本项目仅供学习和个人使用，请遵守小宇宙平台的使用条款。
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request 来改进这个项目。
+
+## 更新日志
+
+### v1.0.0
+
+- 初始版本发布
+- 支持用户登录和收藏列表查看
+- 响应式设计，支持移动端
