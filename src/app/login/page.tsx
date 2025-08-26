@@ -48,8 +48,8 @@ export default function Login() {
         setMsg("登录成功");
         // 保存用户数据到本地存储
         localStorage.setItem('userData', JSON.stringify(data.data));
-        // 登录成功后跳转到收藏列表页面
-        router.push("/favoriteList");
+        // 登录成功后跳转到首页
+        router.push("/");
       } else {
         setMsg(data.message || "登录失败");
       }

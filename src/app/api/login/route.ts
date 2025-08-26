@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(requestParams),
     });
 
+    // 获取res.headers中的x-jike-access-token
     const accessToken = res.headers.get("x-jike-access-token") || "";
     const refreshToken = res.headers.get("x-jike-refresh-token") || "";
     if (!accessToken || !refreshToken) {
@@ -121,6 +122,7 @@ export async function POST(req: NextRequest) {
       throw new Error(`响应处理错误：${errMsg}`);
     }
 
+    // 构造返回数据
     const { data: xiaoyuzhouData } = xiaoyuzhouRes;
     const user = xiaoyuzhouData.user;
     const optimizedData = {

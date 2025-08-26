@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * 收藏列表响应根接口
  */
-interface FavoriteListResponse {
+interface XiaoyuzhouFavoriteListResponse {
   data: EpisodeItem[];
   loadMoreKey: string;
 }
@@ -296,6 +296,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 解析请求体，获取分页参数
+    const requestBody = await req.json();
+    const { loadMoreKey } = requestBody;
+
+    console.log('收藏列表API接收到的完整请求体:', requestBody);
+    console.log('收藏列表API提取的loadMoreKey:', loadMoreKey);
+
     const url = "https://api.xiaoyuzhoufm.com/v1/favorite/list";
     const isoTime = new Date().toISOString();
 
@@ -324,12 +331,27 @@ export async function POST(req: NextRequest) {
       "x-jike-device-properties": "",
       "x-jike-device-id": "",
     };
-    const body = {}
+
+    // 构建请求体，包含limit和可选的loadMoreKey
+    const apiRequestBody: { limit: number; loadMoreKey?: string } = {
+      limit: 20
+    };
+
+    // 如果有loadMoreKey，添加到请求体中
+    if (loadMoreKey) {
+      apiRequestBody.loadMoreKey = loadMoreKey;
+      console.log('使用loadMoreKey进行分页加载:', loadMoreKey);
+      console.log('构建的loadMoreKey参数:', apiRequestBody.loadMoreKey);
+    } else {
+      console.log('首次加载收藏列表');
+    }
+
+    console.log('发送到小宇宙API的完整请求体:', apiRequestBody);
 
     const response = await fetch(url, {
       method: "POST",
       headers: headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(apiRequestBody)
     });
 
     if (!response.ok) {
@@ -366,13 +388,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data: FavoriteListResponse = await response.json();
+    const data: XiaoyuzhouFavoriteListResponse = await response.json();
 
+    console.log('小宇宙API返回数据:', {
+      dataLength: data.data?.length || 0,
+      loadMoreKey: data.loadMoreKey,
+      hasMore: !!data.loadMoreKey
+    });
 
     return NextResponse.json({
       success: true,
       message: "获取收藏列表成功",
-      data: data.data
+      data: data.data,
+      loadMoreKey: data.loadMoreKey
     });
 
   } catch (error) {

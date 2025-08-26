@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { apiRequestWithRefresh, getUserData, clearUserData } from '@/utils/tokenManager';
 
 interface EpisodeItem {
   clapCount: number;
@@ -105,6 +106,8 @@ export default function FavoriteList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadMoreKey, setLoadMoreKey] = useState<string | null>(null);
   const router = useRouter();
 
   // 格式化时长
@@ -143,74 +146,128 @@ export default function FavoriteList() {
 
   // 检查用户登录状态
   useEffect(() => {
-    const storedUserData = localStorage.getItem('userData');
-    if (storedUserData) {
-      try {
-        const parsed = JSON.parse(storedUserData);
-        setUserData(parsed);
-      } catch (e) {
-        console.error('解析用户数据失败:', e);
-        localStorage.removeItem('userData');
-        router.push('/login');
-      }
+    const userData = getUserData();
+    if (userData) {
+      setUserData(userData);
     } else {
       router.push('/login');
     }
   }, [router]);
 
   // 获取收藏列表
-  const fetchFavorites = useCallback(async () => {
+  const fetchFavorites = useCallback(async (isLoadMore = false, currentLoadMoreKey?: string) => {
     if (!userData?.accessToken) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/favoriteList', {
+      const requestBody: { loadMoreKey?: string } = {};
+
+      // 使用传入的loadMoreKey或者当前状态的loadMoreKey
+      const keyToUse = currentLoadMoreKey || (isLoadMore ? loadMoreKey : null);
+
+      console.log('当前状态loadMoreKey:', loadMoreKey);
+      console.log('传入的currentLoadMoreKey:', currentLoadMoreKey);
+      console.log('最终使用的keyToUse:', keyToUse);
+
+      if (isLoadMore && keyToUse) {
+        requestBody.loadMoreKey = keyToUse;
+        console.log('准备发送loadMoreKey:', keyToUse);
+      }
+
+      console.log('发送到API的请求体:', requestBody);
+
+      const response = await apiRequestWithRefresh('/api/favoriteList', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-jike-access-token': userData.accessToken,
         },
+        body: JSON.stringify(requestBody),
       });
 
       const result = await response.json();
 
       if (result.success) {
         console.log('收藏列表数据:', result.data);
+        console.log('loadMoreKey:', result.loadMoreKey);
+        console.log('hasMore:', !!result.loadMoreKey);
+
         if (result.data && result.data.length > 0) {
           console.log('第一个收藏项结构:', result.data[0]);
         }
-        setFavorites(result.data || []);
-      } else {
-        if (response.status === 401) {
-          // 令牌过期，跳转到登录页
-          localStorage.removeItem('userData');
-          router.push('/login');
-          return;
+
+        if (isLoadMore) {
+          setFavorites(prev => {
+            // 去重逻辑：基于eid去重
+            const existingEids = new Set(prev.map((item: EpisodeItem) => item.eid));
+            const newItems = (result.data || []).filter((item: EpisodeItem) => !existingEids.has(item.eid));
+            const newFavorites = [...prev, ...newItems];
+            console.log('合并后的收藏数量:', newFavorites.length, '新增数量:', newItems.length);
+            return newFavorites;
+          });
+        } else {
+          console.log('设置新的收藏列表，数量:', result.data?.length || 0);
+          setFavorites(result.data || []);
         }
+
+        // 检查是否还有更多数据
+        console.log('API返回的loadMoreKey:', result.loadMoreKey);
+        console.log('API返回的loadMoreKey类型:', typeof result.loadMoreKey);
+        console.log('API返回的loadMoreKey内容:', JSON.stringify(result.loadMoreKey));
+
+        setHasMore(!!result.loadMoreKey);
+        setLoadMoreKey(result.loadMoreKey || null);
+
+        console.log('更新后的hasMore:', !!result.loadMoreKey);
+        console.log('更新后的loadMoreKey:', result.loadMoreKey || null);
+      } else {
+        console.error('API返回失败:', result);
         setError(result.message || '获取收藏列表失败');
       }
     } catch (err) {
+      if (err instanceof Error && err.message.includes('Token刷新失败')) {
+        // Token刷新失败，跳转到登录页
+        clearUserData();
+        router.push('/login');
+        return;
+      }
       setError('网络错误，请稍后重试');
       console.error('获取收藏列表错误:', err);
     } finally {
       setIsLoading(false);
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData?.accessToken, router]);
 
   // 当用户数据加载完成后获取收藏列表
   useEffect(() => {
     if (userData?.accessToken) {
-      fetchFavorites();
+      console.log('开始获取收藏列表，用户token:', userData.accessToken.substring(0, 10) + '...');
+      fetchFavorites(false);
     }
-  }, [userData, fetchFavorites]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData?.accessToken]);
 
   // 处理登出
   const handleLogout = () => {
-    localStorage.removeItem('userData');
+    clearUserData();
     router.push('/login');
+  };
+
+  // 加载更多收藏
+  const handleLoadMore = () => {
+    console.log('handleLoadMore被调用');
+    console.log('当前hasMore:', hasMore);
+    console.log('当前loadMoreKey:', loadMoreKey);
+
+    if (hasMore && loadMoreKey) {
+      console.log('开始加载更多，使用loadMoreKey:', loadMoreKey);
+      fetchFavorites(true, loadMoreKey);
+    } else {
+      console.log('无法加载更多 - hasMore:', hasMore, 'loadMoreKey存在:', !!loadMoreKey);
+    }
   };
 
   if (loading) {
@@ -267,7 +324,7 @@ export default function FavoriteList() {
 
               {/* 刷新按钮 */}
               <button
-                onClick={fetchFavorites}
+                onClick={() => fetchFavorites(false)}
                 disabled={isLoading}
                 className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
                 title="刷新收藏列表"
@@ -322,11 +379,18 @@ export default function FavoriteList() {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">暂无收藏</h3>
             <p className="text-gray-500">您还没有收藏任何播客剧集</p>
+            <div className="mt-4 text-sm text-gray-400">
+              调试信息: loading={loading.toString()}, isLoading={isLoading.toString()}, favorites.length={favorites.length}, error={error || 'null'}
+            </div>
           </div>
         )}
 
         {/* 收藏列表 */}
         <div className="space-y-6">
+          {/* 调试信息 */}
+          <div className="text-sm text-gray-500 mb-4">
+            当前收藏数量: {favorites.length}, hasMore: {hasMore.toString()}, loadMoreKey: {loadMoreKey ? '存在' : '无'}
+          </div>
           {favorites.map((episode) => (
             <div
               key={episode.eid}
@@ -435,6 +499,26 @@ export default function FavoriteList() {
               </div>
             </div>
           ))}
+
+          {/* 加载更多按钮 */}
+          {hasMore && (
+            <div className="text-center py-6">
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoading}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>加载中...</span>
+                  </div>
+                ) : (
+                  '加载更多'
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
