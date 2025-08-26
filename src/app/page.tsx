@@ -55,7 +55,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">小宇宙收藏管理</h1>
+              <h1 className="text-xl font-semibold text-gray-900">小宇宙播客管理</h1>
             </div>
             {userData && (
               <div className="flex items-center space-x-4">
@@ -112,7 +112,7 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            欢迎使用小宇宙收藏管理
+            小宇宙播客管理
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             管理您在小宇宙平台收藏的播客剧集，随时随地查看您的收藏内容

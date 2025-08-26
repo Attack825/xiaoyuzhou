@@ -241,7 +241,7 @@ export default function InboxListPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                 </svg>
                             </Link>
-                            <h1 className="text-xl font-semibold text-gray-900">订阅更新</h1>
+                            <h1 className="text-xl font-semibold text-gray-900">订阅列表</h1>
                             <span className="text-sm text-gray-500">
                                 {inboxItems.length} 个更新
                             </span>

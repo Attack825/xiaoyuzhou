@@ -1,15 +1,13 @@
-# 小宇宙收藏管理
+# 小宇宙播客管理
 
-一个基于 Next.js 开发的小宇宙播客收藏管理应用，支持用户登录和收藏列表查看。
+- [X] 短信登录
+- [X] 搜索播客
+- [X] 收藏列表
+- [X] 订阅列表
 
-## 技术栈
+vercel地址：<https://xiaoyuzhou.vercel.app/>
 
-- **前端框架**: Next.js 14 (App Router)
-- **样式**: Tailwind CSS
-- **语言**: TypeScript
-- **状态管理**: React Hooks
-
-## 快速开始
+## 运行
 
 ### 环境要求
 
@@ -35,3 +33,5 @@ npm run dev
 ```bash
 npm run build
 ```
+
+重要提示：本项目仅供学习研究使用，严禁商业用途！
